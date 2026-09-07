@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Impact Area Monitor</title>
+    <style>
+        :root { --accent: #00f3ff; --bg: #050505; --panel: #111; --text: #eee; --border: #333; }
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+        .layout-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+        .chart-container { flex: 1; position: relative; overflow: hidden; background: #000; }
+        .chart-container > div { width: 100% !important; height: 100% !important; }
+        
+        .bottom-panel { 
+            height: 80px; background: var(--panel); border-top: 1px solid var(--border); 
+            display: flex; align-items: center; padding: 0 30px; gap: 20px; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        
+        .bottom-panel::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100px; height: 2px; background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .play-section { flex: 0 0 140px; }
+        .slider-section { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        
+        .time-box { 
+            flex: 0 0 180px; text-align: right; 
+            background: #000; border: 1px solid var(--border); padding: 10px;
+            font-family: 'Consolas', monospace; color: var(--accent); font-size: 18px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .time-box span { font-size: 10px; color: #666; }
+
+        .play-btn { 
+            width: 100%; padding: 10px; background: transparent; border: 1px solid var(--accent); 
+            color: var(--accent); font-family: 'Consolas', monospace; font-weight: bold; cursor: pointer; 
+            transition: 0.2s; text-transform: uppercase; letter-spacing: 2px;
+            position: relative; overflow: hidden;
+        }
+        .play-btn:hover { background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        .play-btn.paused { border-color: #ff3333; color: #ff3333; }
+        
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent); height: 4px; background: #333; appearance: none; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: var(--accent); border-radius: 0; box-shadow: 0 0 10px var(--accent); }
+        
+        .label { color: #666; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-family: 'Consolas', monospace; }
+        
+        .chart-container .legend-bar {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 40px;
+            width: auto !important; height: auto !important; 
+            background: rgba(10, 10, 10, 0.9);
+            padding: 10px 40px;
+            border: 1px solid #333; border-top: 2px solid var(--accent);
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .legend-item { display: flex; align-items: center; cursor: default; transition: 0.2s; }
+        .legend-item:hover { transform: translateY(-2px); }
+        .legend-label { color: #fff; font-size: 12px; font-weight: bold; letter-spacing: 1px; font-family: 'Consolas', monospace; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .sym { width: 24px; height: 24px; margin-right: 12px; display: flex; align-items: center; justify-content: center; }
+        .sym-impact { background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000; width: 16px; height: 16px; box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+        .sym-trace { width: 8px; height: 8px; background: #ff0000; border-radius: 50%; box-shadow: 0 0 8px #ff0000; }
+        .sym-origin { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
+
+    </style>
+</head>
+<body>
+    <div class="layout-wrapper">
+        <div class="chart-container">
+            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.3.1.min.js" integrity="sha256-4rD3fugVb/nVJYUv5Ky3v+fYXoouHaBSP20WIJuEiWg=" crossorigin="anonymous"></script>                <div id="b4c07035-3008-42ab-9c3a-7f1bdf0b3b6a" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b4c07035-3008-42ab-9c3a-7f1bdf0b3b6a")) {                    Plotly.newPlot(                        "b4c07035-3008-42ab-9c3a-7f1bdf0b3b6a",                        [{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","lat":[24.0001,23.9999,23.9999,24.0001],"line":{"color":"#ff0000","width":1},"lon":[120.5,120.5001,120.4999,120.5],"mode":"lines","name":"IMPACTED AREA","type":"scattermap"},{"lat":[24.0],"lon":[120.5],"marker":{"color":"#ff0000","opacity":0.9,"size":6},"mode":"markers","name":"TRACES","type":"scattermap"},{"hoverinfo":"text","hovertext":"Origin Point","lat":[24.0],"lon":[120.5],"marker":{"color":"black","size":10},"mode":"markers","name":"ORIGIN","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb 15A \u5ee0","lat":[24.210748,24.212753,24.212835,24.213276,24.21337,24.213669,24.213693,24.214217,24.214181,24.214289,24.214259,24.214715,24.213774,24.211415,24.210194,24.210371,24.210087,24.210748],"line":{"color":"red","width":2},"lon":[120.613622,120.614386,120.614151,120.614314,120.614092,120.614195,120.614135,120.614355,120.614447,120.614508,120.614672,120.614855,120.617844,120.616943,120.616207,120.615796,120.615588,120.613622],"mode":"lines","name":"\u53f0\u7a4d\u96fb 15A \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb 15B \u5ee0","lat":[24.207266,24.211896,24.211193,24.210209,24.209502,24.207666,24.207899,24.20725,24.207655,24.206988,24.207289,24.206855,24.207266],"line":{"color":"red","width":2},"lon":[120.604354,120.605976,120.608122,120.6078,120.610195,120.609473,120.608511,120.608247,120.607025,120.606751,120.605672,120.605507,120.604354],"mode":"lines","name":"\u53f0\u7a4d\u96fb 15B \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb AP5 \u5ee0","lat":[24.214941,24.215863,24.21575,24.216071,24.215202,24.213999,24.214941],"line":{"color":"red","width":2},"lon":[120.615113,120.615447,120.615847,120.615973,120.618677,120.61823,120.615113],"mode":"lines","name":"\u53f0\u7a4d\u96fb AP5 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u4e2d\u96f6\u5ee2\u88fd\u9020\u4e2d\u5fc3","lat":[24.217901,24.218547,24.218812,24.218866,24.218868,24.219117,24.219097,24.21854,24.217917,24.217735,24.217901],"line":{"color":"red","width":2},"lon":[120.618393,120.617499,120.617482,120.617578,120.618118,120.618159,120.620247,120.6205,120.620484,120.620346,120.618393],"mode":"lines","name":"\u53f0\u4e2d\u96f6\u5ee2\u88fd\u9020\u4e2d\u5fc3","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F22 \u5ee0","lat":[22.709036,22.710023,22.71044,22.711394,22.711269,22.711647,22.708753,22.707774,22.707393,22.706121,22.709036],"line":{"color":"red","width":2},"lon":[120.309586,120.311178,120.310996,120.31252,120.312668,120.313366,120.315414,120.313353,120.313551,120.311368,120.309586],"mode":"lines","name":"\u53f0\u7a4d\u96fb F22 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb AP3 \u5ee0","lat":[24.884367,24.88423,24.882323,24.882495,24.884367],"line":{"color":"red","width":2},"lon":[121.184084,121.186584,121.186456,121.183958,121.184084],"mode":"lines","name":"\u53f0\u7a4d\u96fb AP3 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb AP6 \u5ee0","lat":[24.70323,24.703207,24.709369,24.709336,24.70323],"line":{"color":"red","width":2},"lon":[120.908459,120.906236,120.906242,120.908146,120.908459],"mode":"lines","name":"\u53f0\u7a4d\u96fb AP6 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F20 \u5ee0","lat":[24.764687,24.767499,24.766183,24.763308,24.764687],"line":{"color":"red","width":2},"lon":[121.00186,121.002788,121.007464,121.006402,121.00186],"mode":"lines","name":"\u53f0\u7a4d\u96fb F20 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F12P1&2 \u5ee0","lat":[24.773022,24.774771,24.772975,24.771347,24.773022],"line":{"color":"red","width":2},"lon":[121.010353,121.012461,121.014548,121.012944,121.010353],"mode":"lines","name":"\u53f0\u7a4d\u96fb F12P1&2 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F12P4&5 \u5ee0","lat":[24.769878,24.771193,24.770647,24.769822,24.767651,24.76866,24.769878],"line":{"color":"red","width":2},"lon":[121.010905,121.012924,121.013607,121.014109,121.011096,121.010739,121.010905],"mode":"lines","name":"\u53f0\u7a4d\u96fb F12P4&5 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F12P6 \u5ee0","lat":[24.771438,24.772856,24.771313,24.770037,24.770751,24.771438],"line":{"color":"red","width":2},"lon":[121.009267,121.010237,121.012809,121.010997,121.010482,121.009267],"mode":"lines","name":"\u53f0\u7a4d\u96fb F12P6 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F12P7 \u5ee0","lat":[24.767562,24.769513,24.767834,24.766462,24.766503,24.766819,24.767562],"line":{"color":"red","width":2},"lon":[121.011198,121.01431,121.015373,121.013011,121.012542,121.011837,121.011198],"mode":"lines","name":"\u53f0\u7a4d\u96fb F12P7 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F12P8 \u5ee0","lat":[24.770349,24.770309,24.769786,24.76836,24.767955,24.766788,24.766861,24.768116,24.768328,24.76958,24.770349],"line":{"color":"red","width":2},"lon":[121.008625,121.010572,121.010746,121.010563,121.010715,121.011694,121.008381,121.008181,121.00816,121.008297,121.008625],"mode":"lines","name":"\u53f0\u7a4d\u96fb F12P8 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F18P1 \u5ee0","lat":[23.117909,23.12114,23.122033,23.118956,23.117909],"line":{"color":"red","width":2},"lon":[120.261374,120.259796,120.261913,120.263582,120.261374],"mode":"lines","name":"\u53f0\u7a4d\u96fb F18P1 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F18P2 \u5ee0","lat":[23.117805,23.119772,23.121056,23.119123,23.117805],"line":{"color":"red","width":2},"lon":[120.257763,120.256815,120.259705,120.260661,120.257763],"mode":"lines","name":"\u53f0\u7a4d\u96fb F18P2 \u5ee0","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","hoverinfo":"text","hovertext":"\u53f0\u7a4d\u96fb F18P7 \u5ee0","lat":[23.118892,23.120678,23.118201,23.117833,23.116813,23.118892],"line":{"color":"red","width":2},"lon":[120.263711,120.267745,120.267531,120.267303,120.264822,120.263711],"mode":"lines","name":"\u53f0\u7a4d\u96fb F18P7 \u5ee0","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u6c99\u9e7f\u7ad9","lat":[24.225628],"lon":[120.568794],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u6c99\u9e7f\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u897f\u5c6f\u7ad9","lat":[24.162197],"lon":[120.616917],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u897f\u5c6f\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5fe0\u660e\u7ad9","lat":[24.151958],"lon":[120.641092],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u5fe0\u660e\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u6960\u6893\u7ad9","lat":[22.733667],"lon":[120.328289],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u6960\u6893\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5de6\u71df\u7ad9","lat":[22.674861],"lon":[120.292917],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u5de6\u71df\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u4ec1\u6b66\u7ad9","lat":[22.689056],"lon":[120.332631],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u4ec1\u6b66\u7ad9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u9f8d\u6f6d","lat":[24.86400048],"lon":[121.21645772],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u9f8d\u6f6d","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u65b0\u7af9","lat":[24.8056356],"lon":[120.97236752],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u65b0\u7af9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u982d\u4efd","lat":[24.69690679],"lon":[120.89869286],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u982d\u4efd","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u6734\u5b50","lat":[23.46538],"lon":[120.2478],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u6734\u5b50","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5609\u7fa9","lat":[23.46477865],"lon":[120.44125148],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u5609\u7fa9","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u65b0\u6e2f","lat":[23.554839],"lon":[120.345531],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u65b0\u6e2f","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5584\u5316","lat":[23.11337642],"lon":[120.29740529],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u5584\u5316","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5b89\u5357","lat":[23.048197],"lon":[120.2175],"marker":{"color":"blue","size":8},"mode":"markers","name":"\u5b89\u5357","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u4e2d\u79d1\u967d\u660e(\u967d\u660e\u570b\u5c0f)","lat":[24.22139],"lon":[120.63194],"marker":{"color":"green","size":8},"mode":"markers","name":"\u4e2d\u79d1\u967d\u660e(\u967d\u660e\u570b\u5c0f)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u4e2d\u79d1\u570b\u5b89(\u570b\u5b89\u570b\u5c0f)","lat":[24.19361],"lon":[120.60861],"marker":{"color":"green","size":8},"mode":"markers","name":"\u4e2d\u79d1\u570b\u5b89(\u570b\u5b89\u570b\u5c0f)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u4e2d\u79d1\u516c\u5712(\u90fd\u6703\u516c\u5712)","lat":[24.21111],"lon":[120.59833],"marker":{"color":"green","size":8},"mode":"markers","name":"\u4e2d\u79d1\u516c\u5712(\u90fd\u6703\u516c\u5712)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u4e2d\u79d1\u5be6\u4e2d(\u5be6\u9a57\u4e2d\u5b78)","lat":[24.22944],"lon":[120.62583],"marker":{"color":"green","size":8},"mode":"markers","name":"\u4e2d\u79d1\u5be6\u4e2d(\u5be6\u9a57\u4e2d\u5b78)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5b8f\u6bc5\u793e\u5340(\u7a7a\u54c1\u8eca)","lat":[22.71329],"lon":[120.30849],"marker":{"color":"green","size":8},"mode":"markers","name":"\u5b8f\u6bc5\u793e\u5340(\u7a7a\u54c1\u8eca)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u9f8d\u6f6d(\u74b0\u4fdd\u4e2d\u5fc3)","lat":[24.887787],"lon":[121.1883272],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u9f8d\u6f6d(\u74b0\u4fdd\u4e2d\u5fc3)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u5fb7\u9f8d(\u5fb7\u9f8d\u570b\u5c0f)","lat":[24.882046],"lon":[121.195207],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u5fb7\u9f8d(\u5fb7\u9f8d\u570b\u5c0f)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u8056\u5fb7(\u8056\u5fb7\u91cc)","lat":[24.889177],"lon":[121.201821],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u8056\u5fb7(\u8056\u5fb7\u91cc)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u65b0\u5b89(\u65b0\u5b89)","lat":[24.784714],"lon":[120.991939],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u65b0\u5b89(\u65b0\u5b89)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u975c\u5fc3(\u975c\u5fc3\u6e56)","lat":[24.778281],"lon":[121.013773],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u975c\u5fc3(\u975c\u5fc3\u6e56)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u529b\u884c(\u529b\u884c)","lat":[24.76637],"lon":[121.016265],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u529b\u884c(\u529b\u884c)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u8208\u696d(\u8208\u696d)","lat":[24.77806],"lon":[120.989786],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u8208\u696d(\u8208\u696d)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u5357\u6771","lat":[24.70966],"lon":[120.92154],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u5357\u6771","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u5357\u897f","lat":[24.71361],"lon":[120.91031],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u5357\u897f","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u5357\u5357","lat":[24.70611],"lon":[120.91282],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u5357\u5357","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u79d1\u5357\u5317","lat":[24.70817],"lon":[120.89529],"marker":{"color":"green","size":8},"mode":"markers","name":"\u7af9\u79d1\u5357\u5317","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u516d\u8f15\u6771\u77f3(\u5609\u7fa9\u6771\u77f3)","lat":[23.46248333],"lon":[120.172425],"marker":{"color":"green","size":8},"mode":"markers","name":"\u516d\u8f15\u6771\u77f3(\u5609\u7fa9\u6771\u77f3)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5357\u79d1\u516c13","lat":[23.09003889],"lon":[120.2845694],"marker":{"color":"green","size":8},"mode":"markers","name":"\u5357\u79d1\u516c13","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5357\u79d1\u516c19","lat":[23.12582],"lon":[120.26943],"marker":{"color":"green","size":8},"mode":"markers","name":"\u5357\u79d1\u516c19","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5357\u79d1\u516c29","lat":[23.10635],"lon":[120.2692611],"marker":{"color":"green","size":8},"mode":"markers","name":"\u5357\u79d1\u516c29","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5357\u79d1\u5be6\u4e2d","lat":[23.10739722],"lon":[120.2912611],"marker":{"color":"green","size":8},"mode":"markers","name":"\u5357\u79d1\u5be6\u4e2d","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5927\u96c5(\u81ea\u52d5)","lat":[24.2153],"lon":[120.6244],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u5927\u96c5(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u9ad8\u96c4(\u4eba\u5de5)","lat":[22.7304],"lon":[120.3125],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u9ad8\u96c4(\u4eba\u5de5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u9f8d\u6f6d(\u81ea\u52d5)","lat":[24.889177],"lon":[121.201821],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u9f8d\u6f6d(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u65b0\u7af9\u5e02\u6771\u5340(\u81ea\u52d5)","lat":[24.7987],"lon":[120.9869],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u65b0\u7af9\u5e02\u6771\u5340(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5bf6\u5c71(\u81ea\u52d5)","lat":[24.735],"lon":[121.0252],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u5bf6\u5c71(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u7af9\u6771(\u81ea\u52d5)","lat":[24.7671],"lon":[121.0579],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u7af9\u6771(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u982d\u4efd(\u81ea\u52d5)","lat":[24.6882],"lon":[120.9122],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u982d\u4efd(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u9f8d\u9cf3(\u81ea\u52d5)","lat":[24.7],"lon":[120.8591],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u9f8d\u9cf3(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u516d\u8173(\u81ea\u52d5)","lat":[23.4929],"lon":[120.2906],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u516d\u8173(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u8526\u677e(\u81ea\u52d5)","lat":[23.5143],"lon":[120.2297],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u8526\u677e(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5584\u5316(\u81ea\u52d5)","lat":[23.1129],"lon":[120.2972],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u5584\u5316(\u81ea\u52d5)","type":"scattermap"},{"hoverinfo":"text","hovertext":"\u5b89\u5b9a(\u81ea\u52d5)","lat":[23.1026],"lon":[120.2276],"marker":{"color":"orange","size":8},"mode":"markers","name":"\u5b89\u5b9a(\u81ea\u52d5)","type":"scattermap"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#f2f5fa"},"error_y":{"color":"#f2f5fa"},"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"baxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"line":{"color":"#283442"}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"marker":{"line":{"color":"#283442"}},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#506784"},"line":{"color":"rgb(17,17,17)"}},"header":{"fill":{"color":"#2a3f5f"},"line":{"color":"rgb(17,17,17)"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#f2f5fa","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#f2f5fa"},"geo":{"bgcolor":"rgb(17,17,17)","lakecolor":"rgb(17,17,17)","landcolor":"rgb(17,17,17)","showlakes":true,"showland":true,"subunitcolor":"#506784"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"dark"},"paper_bgcolor":"rgb(17,17,17)","plot_bgcolor":"rgb(17,17,17)","polar":{"angularaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","radialaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"yaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"zaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"}},"shapedefaults":{"line":{"color":"#f2f5fa"}},"sliderdefaults":{"bgcolor":"#C8D4E3","bordercolor":"rgb(17,17,17)","borderwidth":1,"tickwidth":0},"ternary":{"aaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"baxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","caxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"title":{"x":0.05},"updatemenudefaults":{"bgcolor":"#506784","borderwidth":0},"xaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2}}},"map":{"center":{"lat":24.0,"lon":120.5},"style":"open-street-map","zoom":10},"margin":{"l":0,"r":0,"t":0,"b":0},"autosize":true,"showlegend":false,"shapes":[{"line":{"color":"#000000","width":2},"opacity":1,"type":"line","x0":0.02,"x1":0.12,"xref":"paper","y0":0.03,"y1":0.03,"yref":"paper"}],"annotations":[{"font":{"color":"#000000","family":"Consolas","size":12},"showarrow":false,"text":"Scale","x":0.02,"xanchor":"left","xref":"paper","y":0.045,"yref":"paper"}]},                        {"responsive": true}                    )                };            </script>        </div>
+            <div class="legend-bar">
+                <div class="legend-item"><div class="sym"><div class="sym-impact"></div></div><div class="legend-label">IMPACT ZONE</div></div>
+                <div class="legend-item"><div class="sym"><div class="sym-trace"></div></div><div class="legend-label">TRACES</div></div>
+                <div class="legend-item"><div class="sym"><div class="sym-origin"></div></div><div class="legend-label">ORIGIN</div></div>
+            </div>
+        </div>
+        <div class="bottom-panel">
+            <div class="play-section"><button id="playBtn" class="play-btn" onclick="togglePlay()">▶ START</button></div>
+            <div class="slider-section">
+                <div style="display: flex; justify-content: space-between;"><span class="label">TIMELINE SEQUENCE</span><span class="label" id="minLabel">0 MIN</span></div>
+                <input id="timeSlider" type="range" min="0" max="720" step="5" value="0" oninput="updateTime(this.value)">
+            </div>
+            <div class="time-box"><span>ELAPSED</span><div id="timeValue">T+000</div><span>MIN</span></div>
+        </div>
+    </div>
+<script>
+    let dataCache = {};
+    let currentTime = 0;
+    let timer = null;
+    let gd = document.querySelector('.plotly-graph-div');
+    const MAX_STEPS = 720;
+
+    // Convex Hull Algorithm (Monotone Chain)
+    function convexHull(points) {
+        points.sort((a, b) => a[0] == b[0] ? a[1] - b[1] : a[0] - b[0]);
+        const lower = [];
+        for (let p of points) {
+            while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+            lower.push(p);
+        }
+        const upper = [];
+        for (let i = points.length - 1; i >= 0; i--) {
+            const p = points[i];
+            while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+            upper.push(p);
+        }
+        upper.pop(); lower.pop();
+        return lower.concat(upper);
+    }
+    function cross(o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+
+    function updateTime(v) {
+        currentTime = parseInt(v);
+        document.getElementById('timeSlider').value = v;
+        document.getElementById('minLabel').innerText = v + " MIN";
+        document.getElementById('timeValue').innerText = "T+" + v.toString().padStart(3, '0');
+        const frame = dataCache[v] || dataCache["0"];
+        if(frame) Plotly.restyle(gd, { lon: [frame.h_lon, frame.lon], lat: [frame.h_lat, frame.lat] }, [0, 1]);
+    }
+
+    function togglePlay() {
+        const btn = document.getElementById('playBtn');
+        if(!timer) {
+            timer = setInterval(() => {
+                currentTime = (currentTime >= MAX_STEPS) ? 0 : currentTime + 5;
+                updateTime(currentTime);
+            }, 80);
+            btn.innerText = "⏸ STOP"; btn.classList.add('paused');
+        } else {
+            clearInterval(timer); timer = null;
+            btn.innerText = "▶ START"; btn.classList.remove('paused');
+        }
+    }
+    
+    window.addEventListener('resize', () => Plotly.Plots.resize(gd));
+    
+    function updateScale() {
+        try {
+            const mapLayout = gd._fullLayout.map;
+            if(!mapLayout || !mapLayout.zoom) return;
+            const zoom = mapLayout.zoom;
+            const lat = mapLayout.center.lat;
+            const width = gd._fullLayout.width;
+            const metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+            let targetMeters = metersPerPx * 100;
+            let unit = 'm';
+            if(targetMeters >= 1000) { targetMeters/=1000; unit='km'; }
+            const magnitude = Math.pow(10, Math.floor(Math.log10(targetMeters)));
+            let nice = 1;
+            const residual = targetMeters / magnitude;
+            if(residual >= 2) nice = 2;
+            if(residual >= 5) nice = 5;
+            if(residual >= 10) nice = 10;
+            const finalVal = nice * magnitude;
+            const finalMeters = finalVal * (unit==='km'?1000:1);
+            const finalPx = finalMeters / metersPerPx;
+            const paperFraction = finalPx / width;
+            Plotly.relayout(gd, { 'shapes[0].x1': 0.02 + paperFraction, 'annotations[0].text': finalVal + ' ' + unit });
+        } catch(e) { console.log("Scale Error:", e); }
+    }
+    function debounce(func, wait) {
+        let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
+    }
+    const debouncedUpdateScale = debounce(updateScale, 200);
+
+    window.onload = () => setTimeout(() => { Plotly.Plots.resize(gd); debouncedUpdateScale(); }, 1000);
+    gd.on('plotly_relayout', function(ed) { if(ed && (ed['shapes[0].x1'])) return; debouncedUpdateScale(); });
+    gd.on('plotly_restyle', debouncedUpdateScale);
+
+    // MESSAGE LISTENER
+    window.addEventListener('message', function(e) {
+        const payload = e.data;
+        if(payload.type === 'updateData') {
+            const rawData = payload.data;
+            const origin = payload.origin;
+            dataCache = {}; // Clear
+            const STEPS = rawData.length;
+            const LON = 10; const LAT = 9;
+            
+            for(let t=0; t<STEPS; t+=1) {
+                 let t_lons = []; let t_lats = [];
+                 for(let subT=0; subT<=t; subT++) {
+                     for(let m=0; m<rawData[0].length; m++) {
+                         let ln = rawData[subT][m][LON]; let lt = rawData[subT][m][LAT];
+                         if(!isNaN(ln) && !isNaN(lt)) { t_lons.push(ln); t_lats.push(lt); }
+                     }
+                 }
+                 let h_lon=[], h_lat=[];
+                 if(t_lons.length > 2) {
+                     const hull = convexHull(t_lons.map((v, i) => [v, t_lats[i]]));
+                     if(hull.length > 0) { hull.push(hull[0]); h_lon = hull.map(p => p[0]); h_lat = hull.map(p => p[1]); }
+                 }
+                 if(h_lon.length === 0) {
+                     let cl = origin[1], ct = origin[0];
+                     const d = 0.0001;
+                     h_lon = [cl, cl+d, cl-d, cl]; h_lat = [ct+d, ct-d, ct-d, ct+d];
+                 }
+                 let cur_lons = []; let cur_lats = [];
+                 for(let m=0; m<rawData[0].length; m++) {
+                     let ln = rawData[t][m][LON]; let lt = rawData[t][m][LAT];
+                     cur_lons.push(isNaN(ln) ? origin[1] : ln); cur_lats.push(isNaN(lt) ? origin[0] : lt);
+                 }
+                 dataCache[t] = { h_lon: h_lon, h_lat: h_lat, lon: cur_lons, lat: cur_lats };
+            }
+            updateTime(0);
+            Plotly.restyle(gd, {'lon': [[origin[1]]], 'lat': [[origin[0]]]}, [2]);
+            Plotly.relayout(gd, {'map.center': {lat: origin[0], lon: origin[1]}});
+        }
+    });
+</script></body></html>
